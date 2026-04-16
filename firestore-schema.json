@@ -1,0 +1,43 @@
+{
+  "description": "Firestore Schema for SMK Prima Unggul Smart School Hub",
+  "collections": {
+    "users": {
+      "document_id": "uid",
+      "fields": {
+        "uid": "string",
+        "email": "string",
+        "username": "string",
+        "displayName": "string",
+        "photoURL": "string",
+        "role": "enum (admin, guru, siswa)",
+        "department": "string (Major, e.g., TKJ, DKV)",
+        "nisn": "string",
+        "passingStatus": "string (Lulus, Tidak Lulus, Proses)",
+        "createdAt": "timestamp"
+      }
+    },
+    "exam_results": {
+      "document_id": "auto-generated",
+      "fields": {
+        "userId": "string (FK: users.uid)",
+        "userName": "string",
+        "userMajor": "string",
+        "nisn": "string",
+        "score": "number",
+        "isPassed": "boolean",
+        "timestamp": "timestamp"
+      }
+    },
+    "attendance": {
+      "document_id": "auto-generated",
+      "fields": {
+        "userId": "string (FK: users.uid)",
+        "userName": "string",
+        "role": "string",
+        "status": "string (Hadir, Izin, Sakit)",
+        "type": "string (Siswa, Guru)",
+        "timestamp": "timestamp"
+      }
+    }
+  }
+}

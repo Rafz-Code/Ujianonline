@@ -1,0 +1,154 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {uid}
+// Fields:
+//   - uid: string (required)
+//   - email: string (required)
+//   - displayName: string (optional)
+//   - photoURL: string (optional)
+//   - role: string (required, ['admin', 'guru', 'staff'])
+//   - department: string (optional, ['TKJ', 'DKV', 'MPLB', 'AKL', 'BC', 'BD', 'General'])
+//   - createdAt: timestamp (required)
+//
+// Collection: students
+// Document ID: auto-generated or {nis}
+// Fields:
+//   - nis: string (required)
+//   - name: string (required)
+//   - class: string (required)
+//   - major: string (required)
+//   - createdAt: timestamp (required)
+//
+// Collection: staff_attendance
+// Document ID: {uid}_{date} or auto-generated
+// Fields:
+//   - uid: string (required)
+//   - date: string (required, YYYY-MM-DD)
+//   - status: string (required, ['hadir', 'sakit', 'izin', 'alpha'])
+//   - timestamp: timestamp (required)
+//
+// Collection: student_attendance
+// Document ID: auto-generated
+// Fields:
+//   - studentId: string (required)
+//   - teacherId: string (required)
+//   - date: string (required, YYYY-MM-DD)
+//   - status: string (required, ['hadir', 'sakit', 'izin', 'alpha'])
+//   - class: string (required)
+//   - major: string (required)
+//   - timestamp: timestamp (required)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (
+          (request.auth.token.email == "venzyajsb@gmail.com" && request.auth.token.email_verified == true) ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin')
+        );
+    }
+    
+    function isGuru() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'guru';
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (getUserData().role == 'staff' || getUserData().role == 'guru' || getUserData().role == 'admin');
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['admin', 'guru', 'staff'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['nis', 'name', 'class', 'major', 'createdAt']) &&
+             data.nis is string && data.nis.size() < 20 &&
+             data.name is string && data.name.size() < 100 &&
+             data.class is string &&
+             data.major in ['TKJ', 'DKV', 'MPLB', 'AKL', 'BC', 'BD'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidStaffAttendance(data) {
+      return data.keys().hasAll(['uid', 'date', 'status', 'timestamp']) &&
+             data.uid == request.auth.uid &&
+             data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.status in ['hadir', 'sakit', 'izin', 'alpha'] &&
+             data.timestamp is timestamp;
+    }
+
+    function isValidStudentAttendance(data) {
+      return data.keys().hasAll(['studentId', 'teacherId', 'date', 'status', 'class', 'major', 'timestamp']) &&
+             data.teacherId == request.auth.uid &&
+             data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.status in ['hadir', 'sakit', 'izin', 'alpha'] &&
+             data.class is string &&
+             data.major is string &&
+             data.timestamp is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      // Only allow bootstrapping the first admin or existing admins managing users
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(uid) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(uid) || isAdmin()) && 
+                    (isOwner(uid) ? (request.resource.data.role == resource.data.role) : true); // User cannot change their own role unless admin
+      allow delete: if isAdmin();
+    }
+
+    match /students/{studentId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /staff_attendance/{attendanceId} {
+      allow read: if isStaff(); // Everyone can see recap? Or limit to self if not admin?
+      // User can only write their own attendance
+      allow create: if isAuthenticated() && isValidStaffAttendance(request.resource.data) && (isOwner(request.resource.data.uid) || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /student_attendance/{attendanceId} {
+      allow read: if isStaff();
+      allow create: if (isGuru() || isAdmin()) && isValidStudentAttendance(request.resource.data);
+      allow update: if (isGuru() || isAdmin()) && isValidStudentAttendance(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

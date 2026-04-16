@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and department information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "guru", "staff"] },
+        "department": { "type": "string", "enum": ["TKJ", "DKV", "MPLB", "AKL", "BC", "BD", "General"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student record managed by admin",
+      "type": "object",
+      "properties": {
+        "nis": { "type": "string" },
+        "name": { "type": "string" },
+        "class": { "type": "string" },
+        "major": { "type": "string", "enum": ["TKJ", "DKV", "MPLB", "AKL", "BC", "BD"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nis", "name", "class", "major"]
+    },
+    "StaffAttendance": {
+      "title": "Staff Attendance",
+      "description": "Attendance log for teachers and staff",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["hadir", "sakit", "izin", "alpha"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "date", "status", "timestamp"]
+    },
+    "StudentAttendance": {
+      "title": "Student Attendance",
+      "description": "Attendance log for students taken by teachers",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["hadir", "sakit", "izin", "alpha"] },
+        "class": { "type": "string" },
+        "major": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "teacherId", "date", "status", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Student master data"
+    },
+    "/staff_attendance/{attendanceId}": {
+      "schema": "StaffAttendance",
+      "description": "Attendance records for staff/teachers"
+    },
+    "/student_attendance/{attendanceId}": {
+      "schema": "StudentAttendance",
+      "description": "Attendance records for students"
+    }
+  }
+}
