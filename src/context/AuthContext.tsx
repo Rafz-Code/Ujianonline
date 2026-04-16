@@ -1,30 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { 
-  auth, 
-  db, 
-  onAuthStateChanged, 
-  FirebaseUser, 
-  doc, 
-  getDoc, 
-  setDoc,
-  serverTimestamp 
-} from "../lib/firebase";
+import { supabase } from "../lib/supabase";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface UserProfile {
-  uid: string;
+  id: string;
   email: string;
   username?: string;
-  displayName: string;
-  photoURL: string;
+  display_name: string;
+  photo_url: string;
   role: 'admin' | 'guru' | 'siswa';
-  department?: string; // This will store the major
+  department?: string;
   nisn?: string;
-  passingStatus?: 'Lulus' | 'Tidak Lulus' | 'Proses';
-  createdAt: any;
+  passing_status?: 'Lulus' | 'Tidak Lulus' | 'Proses';
+  created_at: string;
 }
 
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: SupabaseUser | null;
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
@@ -46,45 +38,64 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        // Fetch or create profile
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
+    // Check active sessions and sets the user
+    const setSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
+      setLoading(false);
+    };
 
-        if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
-        } else {
-          // Create default profile
-          const isInitialAdmin = user.email === "venzyajsb@gmail.com" || user.email === "smkprimaunggul@smkpu.id";
-          const newProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || "",
-            username: user.email?.split("@")[0] || "user",
-            displayName: user.displayName || user.email?.split("@")[0] || "User",
-            photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-            role: isInitialAdmin ? 'admin' : 'siswa',
-            department: 'General',
-            passingStatus: 'Proses',
-            createdAt: serverTimestamp()
-          };
-          await setDoc(userDocRef, newProfile);
-          setProfile(newProfile);
-        }
+    setSession();
+
+    // Listen for changes on auth state (logged in, signed out, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        await fetchProfile(currentUser.id);
       } else {
         setProfile(null);
       }
+      
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const fetchProfile = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist yet, wait for trigger or manual creation
+          console.warn("Profile not found for user:", uid);
+        } else {
+          throw error;
+        }
+      } else {
+        setProfile(data as UserProfile);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
 
   const value = {
     user,

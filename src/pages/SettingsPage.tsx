@@ -94,7 +94,7 @@ const SettingsPage = () => {
                 <div className="flex flex-col md:flex-row items-center gap-8 pb-8 border-b border-gray-50 dark:border-slate-800">
                   <div className="relative group">
                     <img 
-                      src={profile?.photoURL} 
+                      src={profile?.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} 
                       alt="Avatar" 
                       className="w-24 h-24 rounded-3xl border-4 border-gray-100 dark:border-slate-700 shadow-xl group-hover:scale-105 transition-transform"
                     />
@@ -103,7 +103,7 @@ const SettingsPage = () => {
                     </div>
                   </div>
                   <div className="text-center md:text-left">
-                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase italic tracking-tight">{profile?.displayName}</h3>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase italic tracking-tight">{profile?.display_name}</h3>
                     <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-1">{profile?.role} • {profile?.department || "General"}</p>
                   </div>
                 </div>
@@ -113,7 +113,7 @@ const SettingsPage = () => {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Nama Lengkap</label>
                     <input 
                       type="text" 
-                      defaultValue={profile?.displayName}
+                      defaultValue={profile?.display_name}
                       className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-transparent rounded-[1.5rem] px-6 py-4 font-bold text-slate-800 dark:text-white outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 transition-all shadow-inner"
                     />
                   </div>

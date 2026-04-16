@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, googleProvider, doc, setDoc, db, serverTimestamp } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { motion } from "motion/react";
 import { LogIn, ShieldAlert, Zap, Clock, Calendar, User, Lock, ArrowRight, Chrome } from "lucide-react";
 import { format } from "date-fns";
@@ -36,8 +36,13 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
     setLoading(true);
     setError("");
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate("/hub");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/hub'
+        }
+      });
+      if (error) throw error;
     } catch (err: any) {
       console.error(err);
       setError("Gagal masuk dengan Google. Silakan coba lagi.");
@@ -52,42 +57,26 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
     setError("");
     
     try {
-      // Map username to a format Firebase Auth understands
-      const email = `${username.toLowerCase()}@smkpu.id`;
+      // Map username to a format Supabase Auth understands
+      const email = username.includes("@") ? username : `${username.toLowerCase()}@smkpu.id`;
       
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (authErr: any) {
-        // Special case for the requested admin account
-        // If wrong password or user not found for the special account, we try to ensure it exists
-        if (username.toLowerCase() === "smkprimaunggul" && password === "pu123") {
-          if (authErr.code === "auth/user-not-found") {
-            const userCred = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, "users", userCred.user.uid), {
-              uid: userCred.user.uid,
-              email: email,
-              username: username,
-              displayName: "Administrator SMK PU",
-              photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=admin`,
-              role: 'admin',
-              department: 'Management',
-              createdAt: serverTimestamp()
-            });
-          } else {
-            // If email exists but password was wrong, we can't do much without resetting it,
-            // but for a dev environment, we'll just throw the error.
-            // Ideally, we'd use a service account or something to force the password, 
-            // but here we just rely on standard Firebase behavior.
-            throw authErr;
-          }
-        } else {
-          throw authErr;
-        }
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      if (data.user) {
+        navigate("/hub");
       }
-      navigate("/hub");
     } catch (err: any) {
-      console.error(err);
-      setError("Username atau password salah. Silakan cek kembali.");
+      console.error("Login Error:", err);
+      if (err.message === "Invalid login credentials") {
+        setError("Username atau password salah. Silakan cek kembali.");
+      } else {
+        setError(err.message || "Terjadi kesalahan saat masuk. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }

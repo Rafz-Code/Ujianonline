@@ -16,14 +16,20 @@ const StaffAttendance = () => {
     const checkAttendance = async () => {
       if (!user) return;
       const today = format(new Date(), "yyyy-MM-dd");
-      const q = query(
-        collection(db, "staff_attendance"),
-        where("uid", "==", user.uid),
-        where("date", "==", today)
-      );
-      const snapshot = await getDocs(q);
-      setAttendedToday(!snapshot.empty);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('staff_attendance')
+          .select('id')
+          .eq('uid', user.id)
+          .eq('date', today);
+        
+        if (error) throw error;
+        setAttendedToday(data && data.length > 0);
+      } catch (err) {
+        console.error("Error checking attendance:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     checkAttendance();
   }, [user]);
@@ -33,26 +39,19 @@ const StaffAttendance = () => {
     setSubmitting(true);
     try {
       const today = format(new Date(), "yyyy-MM-dd");
-      // Firebase (Legacy)
-      await addDoc(collection(db, "staff_attendance"), {
-        uid: user.uid,
-        date: today,
-        status: "hadir",
-        timestamp: serverTimestamp(),
-        displayName: profile?.displayName,
-        role: profile?.role
-      });
-
+      
       // Supabase (Official)
-      await supabase.from('staff_attendance').insert([
+      const { error } = await supabase.from('staff_attendance').insert([
         {
-          uid: user.uid,
+          uid: user.id,
           date: today,
           status: "hadir",
-          display_name: profile?.displayName,
+          display_name: profile?.display_name,
           role: profile?.role
         }
       ]);
+
+      if (error) throw error;
 
       setAttendedToday(true);
     } catch (error) {

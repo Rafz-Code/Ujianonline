@@ -60,9 +60,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, navigate }) => {
 
   return (
     <div className={cn(
-      "flex h-screen overflow-hidden transition-colors duration-300",
+      "flex h-screen w-full overflow-hidden transition-colors duration-300 relative",
       darkMode ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900"
     )}>
+      {/* Sidebar Mobile Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <AnimatePresence mode="wait">
         {isSidebarOpen && (
@@ -70,8 +83,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, navigate }) => {
             initial={{ x: -260 }}
             animate={{ x: 0 }}
             exit={{ x: -260 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={cn(
-              "w-64 border-r flex flex-col z-50 absolute lg:relative h-full transition-colors duration-300",
+              "w-64 border-r flex flex-col z-50 fixed lg:relative h-full transition-colors duration-300",
               darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"
             )}
           >
@@ -106,12 +120,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, navigate }) => {
             <div className={cn("p-4 border-t", darkMode ? "border-slate-800" : "border-gray-100")}>
               <div className={cn("rounded-2xl p-4 flex items-center gap-3", darkMode ? "bg-slate-800/50" : "bg-gray-50")}>
                 <img 
-                  src={profile?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} 
+                  src={profile?.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} 
                   alt="Avatar" 
                   className={cn("w-10 h-10 rounded-full border-2", darkMode ? "border-slate-700" : "border-white")}
                 />
                 <div className="flex-1 overflow-hidden">
-                  <p className={cn("text-sm font-bold truncate", darkMode ? "text-white" : "text-slate-900")}>{profile?.displayName}</p>
+                  <p className={cn("text-sm font-bold truncate", darkMode ? "text-white" : "text-slate-900")}>{profile?.display_name}</p>
                   <p className="text-xs text-gray-400 capitalize">{profile?.role}</p>
                 </div>
               </div>
@@ -158,18 +172,18 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, navigate }) => {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 overflow-y-auto transition-colors duration-300 relative",
+          "flex-1 overflow-y-auto scroll-smooth transition-colors duration-300 relative",
           darkMode ? "bg-slate-950" : "bg-gray-50/50"
         )}>
-          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 min-h-full">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-10 min-h-full flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div
                 key={window.location.pathname}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="w-full h-full"
+                initial={{ opacity: 0, scale: 0.98, y: 5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -5 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="flex-1 w-full"
               >
                 {children}
               </motion.div>

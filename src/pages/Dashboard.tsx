@@ -43,7 +43,7 @@ const Dashboard = () => {
       <section className="bg-slate-900 rounded-[2rem] p-8 lg:p-12 text-white relative overflow-hidden">
         <div className="relative z-10">
           <h1 className="text-3xl lg:text-4xl font-black mb-4">
-            Halo, {profile?.displayName}! 👋
+            Halo, {profile?.display_name}! 👋
           </h1>
           <p className="text-white/60 font-medium max-w-lg mb-8">
             Selamat datang di sistem manajemen SMK Prima Unggul. Semua layanan akademik Anda sudah terintegrasi dan siap digunakan.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { auth, db, createUserWithEmailAndPassword, doc, setDoc, serverTimestamp } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { motion } from "motion/react";
 import { UserPlus, ShieldAlert, ArrowLeft, GraduationCap, UserCog, User, Lock, Hash } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -31,32 +31,31 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
     setError("");
     
     try {
-      const email = `${username.toLowerCase()}@smkpu.id`;
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Create profile
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: email,
-        username: username,
-        displayName: displayName || username,
-        photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-        role: role,
-        department: role === 'siswa' ? major : 'General',
-        nisn: role === 'siswa' ? nisn : null,
-        passingStatus: 'Proses',
-        createdAt: serverTimestamp()
+      const email = username.includes("@") ? username : `${username.toLowerCase()}@smkpu.id`;
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName || username,
+            role: role,
+            department: role === 'siswa' ? major : 'General',
+            nisn: role === 'siswa' ? nisn : null,
+          }
+        }
       });
 
-      navigate("/portal");
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        // Successful signup, Supabase trigger will handle profile creation
+        navigate("/login");
+        alert("Pendaftaran berhasil! Silakan masuk ke akun Anda.");
+      }
     } catch (err: any) {
       console.error(err);
-      if (err.code === "auth/email-already-in-use") {
-        setError("Username sudah digunakan. Silakan pilih yang lain.");
-      } else {
-        setError("Gagal membuat akun: " + err.message);
-      }
+      setError("Gagal membuat akun: " + err.message);
     } finally {
       setLoading(false);
     }

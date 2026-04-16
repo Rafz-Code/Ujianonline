@@ -32,7 +32,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   const [isExamStarted, setIsExamStarted] = useState(false);
   const [hasPresensi, setHasPresensi] = useState(false);
   const [presensiData, setPresensiData] = useState({
-    name: profile?.displayName || "",
+    name: profile?.display_name || "",
     nisn: profile?.nisn || "",
     jurusan: profile?.department || ""
   });
@@ -48,7 +48,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   useEffect(() => {
     if (profile) {
       setPresensiData({
-        name: profile.displayName || "",
+        name: profile.display_name || "",
         nisn: profile.nisn || "",
         jurusan: profile.department || ""
       });
@@ -131,22 +131,11 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
     setScore(finalScore);
 
     try {
-      if (profile?.uid) {
-        // Save to Firebase (Legacy/Backup)
-        await addDoc(collection(db, "exam_results"), {
-          userId: profile.uid,
-          userName: presensiData.name,
-          userMajor: presensiData.jurusan,
-          nisn: presensiData.nisn,
-          score: finalScore,
-          isPassed: finalScore >= 75,
-          timestamp: serverTimestamp()
-        });
-
+      if (profile?.id) {
         // Save to Supabase (Official)
         await supabase.from('exam_results').insert([
           {
-            user_id: profile.uid,
+            user_id: profile.id,
             user_name: presensiData.name,
             user_major: presensiData.jurusan,
             nisn: presensiData.nisn,
@@ -504,7 +493,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
                     { label: "Nama Lengkap", value: presensiData.name, icon: User },
                     { label: "NISN", value: presensiData.nisn || "Belum Terdaftar", icon: Hash },
                     { label: "Program Keahlian", value: presensiData.jurusan || "General", icon: GraduationCap },
-                    { label: "Status Akademik", value: profile?.passingStatus || "Proses", icon: CheckCircle2 },
+                    { label: "Status Akademik", value: profile?.passing_status || "Proses", icon: CheckCircle2 },
                   ].map((info) => (
                     <div key={info.label} className="border-b border-gray-50 pb-4 last:border-none">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{info.label}</p>

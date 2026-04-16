@@ -69,24 +69,11 @@ const StudentAttendance = () => {
     try {
       const today = format(new Date(), "yyyy-MM-dd");
       const batch = students.map(async (student) => {
-        // Firebase (Legacy)
-        await addDoc(collection(db, "student_attendance"), {
-          studentId: student.id,
-          teacherId: user?.uid,
-          date: today,
-          status: attendance[student.id],
-          class: student.class,
-          major: student.major,
-          nis: student.nis,
-          studentName: student.name,
-          timestamp: serverTimestamp()
-        });
-
         // Supabase (Official)
-        await supabase.from('student_attendance').insert([
+        const { error } = await supabase.from('student_attendance').insert([
           {
             student_id: student.id,
-            teacher_id: user?.uid,
+            teacher_id: user?.id,
             date: today,
             status: attendance[student.id],
             class_name: student.class,
@@ -95,6 +82,7 @@ const StudentAttendance = () => {
             student_name: student.name
           }
         ]);
+        if (error) throw error;
       });
       await Promise.all(batch);
       setSubmitted(true);

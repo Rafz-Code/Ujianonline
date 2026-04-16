@@ -1,11 +1,27 @@
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+let supabaseInstance: any = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.');
-}
+// Proxy to handle lazy initialization and prevent crash on module load
+export const supabase = new Proxy({}, {
+  get(target, prop) {
+    if (!supabaseInstance) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('Supabase configuration missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Settings.');
+        // Return a dummy object that fails gracefully when methods are called
+        return (...args: any[]) => {
+          throw new Error('Supabase is not configured. Please check your environment variables.');
+        };
+      }
+      
+      supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    }
+    
+    const value = (supabaseInstance as any)[prop];
+    return typeof value === 'function' ? value.bind(supabaseInstance) : value;
+  }
+}) as any;

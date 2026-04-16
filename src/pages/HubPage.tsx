@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, ArrowRight, ShieldCheck, User, LogOut, GraduationCap } from "lucide-react";
-import { auth, signOut } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
 interface PageProps {
@@ -13,7 +13,7 @@ const HubPage: React.FC<PageProps> = ({ navigate }) => {
   const { profile } = useAuth();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     navigate("/login");
   };
 
@@ -69,11 +69,11 @@ const HubPage: React.FC<PageProps> = ({ navigate }) => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 bg-white p-6 rounded-[2.5rem] shadow-xl border border-white">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl overflow-hidden border-4 border-gray-100 shadow-sm">
-              <img src={profile?.photoURL} alt="" />
+              <img src={profile?.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} alt="" />
             </div>
             <div>
               <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest px-1">Terautentikasi</p>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{profile?.displayName}</h2>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{profile?.display_name}</h2>
               <p className="text-xs font-bold text-primary italic uppercase tracking-wider">
                 {profile?.role} • {profile?.department || "Umum"}
               </p>

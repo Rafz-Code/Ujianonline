@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { db, collection, getDocs, doc, updateDoc, deleteDoc } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { Settings, Shield, User, Edit3, Trash2, Mail, Briefcase } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface AppUser {
-  uid: string;
+  id: string;
   email: string;
-  displayName: string;
+  display_name: string;
   role: string;
   department: string;
-  photoURL: string;
+  photo_url: string;
 }
 
 const UserManagement = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState<AppUser | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const snapshot = await getDocs(collection(db, "users"));
-      setUsers(snapshot.docs.map(doc => doc.data() as AppUser));
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) throw error;
+      setUsers(data as AppUser[]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -31,20 +31,28 @@ const UserManagement = () => {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const handleUpdateRole = async (uid: string, newRole: string) => {
+  const handleUpdateRole = async (id: string, newRole: string) => {
     try {
-      await updateDoc(doc(db, "users", uid), { role: newRole });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', id);
+      
+      if (error) throw error;
       fetchUsers();
-      setEditingUser(null);
     } catch (err) {
       alert("Gagal update role");
     }
   };
 
-  const handleDeleteUser = async (uid: string) => {
-    if (confirm("Hapus akses user ini?")) {
-      await deleteDoc(doc(db, "users", uid));
-      fetchUsers();
+  const handleDeleteUser = async (id: string) => {
+    if (confirm("Hapus akses user ini dari database profil? (Catatan: Ini tidak menghapus akun auth)")) {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) {
+        alert("Gagal hapus profile");
+      } else {
+        fetchUsers();
+      }
     }
   };
 
@@ -62,11 +70,11 @@ const UserManagement = () => {
           <div className="lg:col-span-2 text-center p-20">Loading...</div>
         ) : (
           users.map((user) => (
-            <div key={user.uid} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-start gap-4">
-              <img src={user.photoURL} alt="" className="w-16 h-16 rounded-2xl border-4 border-gray-50 shrink-0" />
+            <div key={user.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-start gap-4">
+              <img src={user.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} alt="" className="w-16 h-16 rounded-2xl border-4 border-gray-50 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-black text-slate-800 truncate">{user.displayName}</h3>
+                  <h3 className="font-black text-slate-800 truncate">{user.display_name}</h3>
                   <div className={cn("px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest", {
                     "bg-red-100 text-red-600": user.role === "admin",
                     "bg-blue-100 text-blue-600": user.role === "guru",
@@ -85,15 +93,16 @@ const UserManagement = () => {
                 <div className="mt-4 pt-4 border-t border-gray-50 flex gap-2">
                   <select 
                     value={user.role}
-                    onChange={(e) => handleUpdateRole(user.uid, e.target.value)}
+                    onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                     className="bg-gray-50 border-none rounded-lg text-xs font-black px-3 py-2 outline-none"
                   >
                     <option value="admin">Admin</option>
                     <option value="guru">Guru</option>
+                    <option value="siswa">Siswa</option>
                     <option value="staff">Staff</option>
                   </select>
                   <button 
-                    onClick={() => handleDeleteUser(user.uid)}
+                    onClick={() => handleDeleteUser(user.id)}
                     className="p-2 hover:bg-red-50 text-red-600 rounded-lg ml-auto"
                   >
                     <Trash2 size={16} />
