@@ -227,10 +227,10 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   if (isExamStarted) {
     const currentQ = activeQuestions[currentQuestionIndex];
     return (
-      <div className="w-full relative min-h-screen">
-        <div className="max-w-5xl mx-auto">
+      <div className="w-full flex justify-center pb-20">
+        <div className="w-full max-w-5xl space-y-10">
           <div className={cn(
-            "flex items-center justify-between mb-8 sticky top-0 backdrop-blur-md py-6 z-[60] transition-all border-b",
+            "flex items-center justify-between sticky top-0 backdrop-blur-md py-6 z-[100] transition-all border-b",
             darkMode ? "bg-slate-950/90 border-slate-800" : "bg-gray-50/90 border-gray-200"
           )}>
             <div className="flex items-center gap-4">
@@ -251,104 +251,103 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
           </div>
 
           <div className={cn(
-            "rounded-[3rem] p-8 lg:p-14 border shadow-2xl relative overflow-hidden transition-colors z-10 mx-auto",
+            "rounded-[3rem] p-8 lg:p-14 border shadow-2xl relative overflow-hidden transition-colors z-10",
             darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-100"
           )}>
-          <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-10 -mt-10 rounded-full -z-10", darkMode ? "bg-slate-800" : "bg-gray-50")}></div>
-          
-          <motion.div
-            key={currentQuestionIndex}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="space-y-10"
-          >
-            <h2 className={cn("text-2xl lg:text-3xl font-black leading-tight", darkMode ? "text-white" : "text-slate-900")}>
-              {currentQ.text}
-            </h2>
+            <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-10 -mt-10 rounded-full -z-10", darkMode ? "bg-slate-800" : "bg-gray-50")}></div>
+            
+            <motion.div
+              key={currentQuestionIndex}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="space-y-10"
+            >
+              <h2 className={cn("text-2xl lg:text-3xl font-black leading-tight", darkMode ? "text-white" : "text-slate-900")}>
+                {currentQ.text}
+              </h2>
 
-            <div className="grid gap-4">
-              {currentQ.options.map((option, idx) => (
+              <div className="grid gap-4">
+                {currentQ.options.map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleAnswerSelect(idx)}
+                    className={cn(
+                      "flex items-center gap-6 p-6 rounded-[2rem] border-2 text-left font-bold transition-all group relative z-10",
+                      userAnswers[currentQ.id] === idx 
+                        ? "border-primary bg-red-50 dark:bg-red-900/10 text-primary shadow-xl shadow-primary/10" 
+                        : darkMode ? "border-slate-800 hover:border-slate-600 text-slate-300 bg-slate-800/50" : "border-gray-100 hover:border-gray-200 text-slate-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center font-black transition-all",
+                      userAnswers[currentQ.id] === idx ? "bg-primary text-white" : darkMode ? "bg-slate-700 text-slate-400 group-hover:bg-slate-600" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200"
+                    )}>
+                      {String.fromCharCode(65 + idx)}
+                    </div>
+                    <span className="text-lg flex-1">{option}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            <div className={cn("flex items-center justify-between mt-12 pt-10 border-t", darkMode ? "border-slate-800" : "border-gray-50")}>
+              <button
+                onClick={prevQuestion}
+                disabled={currentQuestionIndex === 0}
+                className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-slate-400 hover:text-slate-600 transition-all disabled:opacity-30 uppercase tracking-widest text-sm"
+              >
+                <ArrowLeft size={18} /> Sebelumnya
+              </button>
+              
+              {currentQuestionIndex === activeQuestions.length - 1 ? (
                 <button
-                  key={idx}
-                  onClick={() => handleAnswerSelect(idx)}
+                  onClick={finishExam}
+                  disabled={loading}
+                  className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 shadow-primary/30 uppercase italic"
+                >
+                  {loading ? "Menyimpan..." : (
+                    <>Selesaikan Ujian <Zap size={20} fill="white" /></>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={nextQuestion}
                   className={cn(
-                    "flex items-center gap-6 p-6 rounded-[2rem] border-2 text-left font-bold transition-all group relative z-10",
-                    userAnswers[currentQ.id] === idx 
-                      ? "border-primary bg-red-50 dark:bg-red-900/10 text-primary shadow-xl shadow-primary/10" 
-                      : darkMode ? "border-slate-800 hover:border-slate-600 text-slate-300 bg-slate-800/50" : "border-gray-100 hover:border-gray-200 text-slate-600 hover:bg-gray-50"
+                    "px-10 py-5 rounded-[2rem] font-black text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 uppercase",
+                    darkMode ? "bg-white text-slate-900 hover:bg-gray-100 shadow-white/5" : "bg-slate-900 text-white hover:bg-black shadow-slate-200"
                   )}
                 >
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center font-black transition-all",
-                    userAnswers[currentQ.id] === idx ? "bg-primary text-white" : darkMode ? "bg-slate-700 text-slate-400 group-hover:bg-slate-600" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200"
-                  )}>
-                    {String.fromCharCode(65 + idx)}
-                  </div>
-                  <span className="text-lg flex-1">{option}</span>
+                  Berikutnya <ArrowRight size={20} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={cn(
+            "p-8 rounded-[2.5rem] border shadow-xl overflow-hidden transition-colors z-20 relative",
+            darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-100"
+          )}>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 px-1">Navigasi Soal</p>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
+              {activeQuestions.map((q, idx) => (
+                <button
+                  key={q.id}
+                  onClick={() => setCurrentQuestionIndex(idx)}
+                  className={cn(
+                    "h-12 w-full rounded-xl font-black text-sm flex items-center justify-center transition-all",
+                    currentQuestionIndex === idx ? "ring-2 ring-primary ring-offset-4" : "",
+                    userAnswers[q.id] !== undefined 
+                      ? "bg-emerald-500 text-white" 
+                      : darkMode ? "bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  )}
+                >
+                  {idx + 1}
                 </button>
               ))}
             </div>
-          </motion.div>
-
-          <div className={cn("flex items-center justify-between mt-12 pt-10 border-t", darkMode ? "border-slate-800" : "border-gray-50")}>
-            <button
-              onClick={prevQuestion}
-              disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-slate-400 hover:text-slate-600 transition-all disabled:opacity-30 uppercase tracking-widest text-sm"
-            >
-              <ArrowLeft size={18} /> Sebelumnya
-            </button>
-            
-            {currentQuestionIndex === activeQuestions.length - 1 ? (
-              <button
-                onClick={finishExam}
-                disabled={loading}
-                className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 shadow-primary/30 uppercase italic"
-              >
-                {loading ? "Menyimpan..." : (
-                  <>Selesaikan Ujian <Zap size={20} fill="white" /></>
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={nextQuestion}
-                className={cn(
-                  "px-10 py-5 rounded-[2rem] font-black text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 uppercase",
-                  darkMode ? "bg-white text-slate-900 hover:bg-gray-100 shadow-white/5" : "bg-slate-900 text-white hover:bg-black shadow-slate-200"
-                )}
-              >
-                Berikutnya <ArrowRight size={20} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Question Navigator */}
-        <div className={cn(
-          "mt-10 p-8 rounded-[2.5rem] border shadow-xl overflow-hidden transition-colors",
-          darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-100"
-        )}>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 px-1">Navigasi Soal</p>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
-            {activeQuestions.map((q, idx) => (
-              <button
-                key={q.id}
-                onClick={() => setCurrentQuestionIndex(idx)}
-                className={cn(
-                  "h-12 w-full rounded-xl font-black text-sm flex items-center justify-center transition-all",
-                  currentQuestionIndex === idx ? "ring-2 ring-primary ring-offset-4" : "",
-                  userAnswers[q.id] !== undefined 
-                    ? "bg-emerald-500 text-white" 
-                    : darkMode ? "bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                )}
-              >
-                {idx + 1}
-              </button>
-            ))}
           </div>
         </div>
       </div>
-    </div>
     );
   }
 
