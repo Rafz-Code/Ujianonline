@@ -12,10 +12,21 @@ export const supabase = new Proxy({}, {
 
       if (!supabaseUrl || !supabaseAnonKey) {
         console.error('Supabase configuration missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Settings.');
-        // Return a dummy object that fails gracefully when methods are called
-        return (...args: any[]) => {
-          throw new Error('Supabase is not configured. Please check your environment variables.');
-        };
+        // Return a proxy that handles nested access without throwing immediately
+        const nullClient = new Proxy({}, {
+          get(t, p) {
+            console.error(`Attempted to access supabase.${String(p)} but Supabase is not configured.`);
+            return new Proxy(() => {}, {
+              get: () => () => {},
+              apply: () => {
+                const msg = 'Supabase environment variables are missing. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your Vercel project settings.';
+                console.error(msg);
+                return { data: { session: null, subscription: { unsubscribe: () => {} } }, error: { message: msg } };
+              }
+            });
+          }
+        });
+        return nullClient;
       }
       
       supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
