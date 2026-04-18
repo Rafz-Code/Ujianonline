@@ -58,10 +58,10 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
     },
     { 
       name: "BC", 
-      full: "Bisnis Digital", 
-      icon: ShoppingBag, 
+      full: "Broadcasting", 
+      icon: Video, 
       color: "bg-red-600",
-      desc: "Bisnis Digital (BC) merupakan jurusan yang mempelajari pengelolaan bisnis berbasis teknologi digital. Siswa akan belajar tentang digital marketing, pengelolaan media sosial, pembuatan konten promosi, e-commerce, branding, serta strategi bisnis online. Lulusan BC memiliki peluang menjadi digital marketer, social media specialist, entrepreneur, atau bekerja di perusahaan berbasis digital."
+      desc: "Jurusan Broadcasting adalah bidang keahlian yang mempelajari tentang proses produksi, pengolahan, dan penyiaran informasi atau hiburan melalui media elektronik seperti televisi, radio, dan platform digital. Siswa dibekali keterampilan teknis dan kreatif dalam membuat konten audiovisual yang menarik dan informatif. Dalam jurusan ini, siswa mempelajari teknik pengambilan gambar, pengolahan audio dan video, penulisan naskah, serta kemampuan berbicara di depan umum. Selain itu, siswa juga diajarkan bagaimana mengelola produksi sebuah program siaran dari tahap perencanaan hingga penayangan. Lulusan jurusan Broadcasting diharapkan mampu bekerja di industri media sebagai presenter, reporter, kameramen, editor, content creator, maupun profesi lain yang berkaitan dengan dunia penyiaran dan produksi konten digital."
     },
     { 
       name: "AKL", 
@@ -122,9 +122,14 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
               >
                 Mulai Absensi Sekarang
               </button>
-              <div className="flex items-center gap-3 px-6 py-4 text-gray-400">
-                <MapPin size={20} /> Tangsel, Indonesia
-              </div>
+              <a 
+                href="https://maps.app.goo.gl/m2WhDZ62FqRJ5VHr8" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-6 py-4 text-gray-400 hover:text-primary transition-colors group cursor-pointer"
+              >
+                <MapPin size={20} className="group-hover:animate-bounce" /> Tangsel, Indonesia
+              </a>
             </div>
           </motion.div>
 

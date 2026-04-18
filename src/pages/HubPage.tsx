@@ -51,89 +51,115 @@ const HubPage: React.FC<PageProps> = ({ navigate }) => {
   ].filter(opt => opt.show);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Moving Background Elements */}
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden perspective-[2000px]">
+      {/* High Detail Moving Background Elements */}
       <motion.div 
-        animate={{ scale: [1, 1.3, 1], rotate: [0, 180, 0] }}
-        transition={{ duration: 15, repeat: Infinity }}
-        className="absolute -top-20 -right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"
+        animate={{ 
+          scale: [1, 1.3, 1], 
+          rotate: [0, 180, 0],
+          x: [0, 50, 0]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute -top-20 -right-20 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10"
       ></motion.div>
       <motion.div 
-        animate={{ scale: [1.3, 1, 1.3], rotate: [180, 0, 180] }}
-        transition={{ duration: 15, repeat: Infinity }}
-        className="absolute -bottom-20 -left-20 w-96 h-96 bg-red-800/5 rounded-full blur-3xl -z-10"
+        animate={{ 
+          scale: [1.3, 1, 1.3], 
+          rotate: [180, 0, 180],
+          x: [0, -50, 0]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-red-800/5 rounded-full blur-[140px] -z-10"
       ></motion.div>
 
-      <div className="max-w-4xl w-full">
-        {/* User Profile Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 bg-white p-6 rounded-[2.5rem] shadow-xl border border-white">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden border-4 border-gray-100 shadow-sm">
-              <img src={profile?.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} alt="" />
+      <div className="max-w-5xl w-full relative z-10" style={{ transformStyle: "preserve-3d" }}>
+        {/* User Profile Header - Elevated 3D Glassmorphism */}
+        <motion.div 
+          initial={{ opacity: 0, y: -30, rotateX: -10 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 bg-white/70 backdrop-blur-3xl p-8 rounded-[3.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden"
+          style={{ transform: "translateZ(80px)" }}
+        >
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="w-20 h-20 rounded-[1.8rem] overflow-hidden border-4 border-white shadow-xl transform hover:scale-110 transition-transform cursor-pointer">
+              <img src={profile?.photo_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=school"} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest px-1">Terautentikasi</p>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{profile?.display_name}</h2>
-              <p className="text-xs font-bold text-primary italic uppercase tracking-wider">
-                {profile?.role} • {profile?.department || "Umum"}
-              </p>
+              <div className="flex items-center gap-2 mb-1 px-1">
+                <ShieldCheck size={14} className="text-primary" />
+                <p className="text-gray-400 font-black text-[10px] uppercase tracking-[0.4em]">Sesi Aktiv</p>
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">{profile?.display_name}</h2>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-black text-white bg-slate-900 px-3 py-1 rounded-full uppercase italic tracking-wider">
+                  {profile?.role}
+                </span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  {profile?.department || "Umum"}
+                </span>
+              </div>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-sm hover:bg-red-100 transition-all"
+            className="flex items-center gap-3 px-8 py-4 bg-red-50 text-red-600 rounded-[1.8rem] font-black text-sm hover:bg-red-600 hover:text-white hover:shadow-2xl hover:shadow-red-200 transition-all active:scale-95 group relative z-10"
           >
-            <LogOut size={18} /> KELUAR SISTEM
+            <LogOut size={20} className="group-hover:rotate-12 transition-transform" /> KELUAR SISTEM
           </button>
-        </div>
+          
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+        </motion.div>
 
-        <div className="text-center mb-16">
+        <div className="text-center mb-20" style={{ transform: "translateZ(120px)" }}>
           <motion.div 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
           >
-            <h1 className="text-4xl lg:text-6xl font-black text-slate-900 tracking-tighter mb-4 leading-none uppercase italic">
-              Pilih <span className="text-primary italic">Layanan Hub</span>
+            <h1 className="text-5xl lg:text-8xl font-black text-slate-900 tracking-tighter mb-6 leading-none uppercase italic drop-shadow-sm">
+              LAYANAN <span className="text-primary italic">HUB PUSAT</span>
             </h1>
-            <p className="text-gray-500 font-medium max-w-xl mx-auto">Silakan pilih destinasi layanan digital Anda untuk melanjutkan operasional akademik SMK Prima Unggul.</p>
+            <div className="h-2 w-32 bg-primary mx-auto rounded-full mb-8 shadow-xl shadow-primary/20"></div>
+            <p className="text-gray-500 font-black uppercase tracking-[0.4em] text-xs max-w-xl mx-auto opacity-60">SMK Prima Unggul Integrated Academic System</p>
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {menuOptions.map((opt, idx) => (
             <motion.div
               key={opt.path}
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
+              transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }}
               onClick={() => navigate(opt.path)}
               className="group cursor-pointer"
+              style={{ transformStyle: "preserve-3d" }}
             >
               <div className={cn(
-                "h-full p-10 rounded-[3rem] text-white flex flex-col justify-between transition-all hover:scale-[1.02] active:scale-95 shadow-2xl relative overflow-hidden",
+                "h-full p-12 rounded-[4rem] text-white flex flex-col justify-between transition-all hover:scale-[1.05] active:scale-95 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] relative overflow-hidden border border-white/20",
                 opt.color,
                 opt.shadow
-              )}>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center mb-10 group-hover:rotate-12 transition-transform">
-                    <opt.icon size={32} />
+              )} style={{ transform: "translateZ(50px)" }}>
+                <div className="relative z-10" style={{ transform: "translateZ(80px)" }}>
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2.2rem] flex items-center justify-center mb-12 group-hover:rotate-12 transition-transform shadow-xl">
+                    <opt.icon size={36} />
                   </div>
-                  <h3 className="text-3xl font-black mb-3">{opt.title}</h3>
-                  <p className="text-white/60 font-bold leading-relaxed">{opt.desc}</p>
+                  <h3 className="text-4xl font-black mb-4 tracking-tight drop-shadow-md">{opt.title}</h3>
+                  <p className="text-white/80 font-bold leading-relaxed italic text-sm">{opt.desc}</p>
                 </div>
 
-                <div className="mt-12 flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full">
-                    {opt.featured ? <ShieldCheck size={16} fill="white" /> : <User size={16} />}
-                    {opt.featured ? "Akses Akademik" : "Akses Utama"}
+                <div className="mt-16 flex items-center justify-between relative z-10" style={{ transform: "translateZ(100px)" }}>
+                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full border border-white/10">
+                    {opt.featured ? <ShieldCheck size={18} fill="white" /> : <User size={18} />}
+                    {opt.featured ? "Sistem Verifikasi" : "Akses Utama"}
                   </div>
-                  <div className="w-12 h-12 bg-white text-slate-900 rounded-full flex items-center justify-center -rotate-45 group-hover:rotate-0 transition-transform">
-                    <ArrowRight size={24} />
+                  <div className="w-14 h-14 bg-white text-slate-900 rounded-[1.5rem] shadow-2xl flex items-center justify-center -rotate-45 group-hover:rotate-0 group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                    <ArrowRight size={28} />
                   </div>
                 </div>
 
-                {/* Aesthetic Detail */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 -mr-16 -mt-16 rounded-full blur-3xl"></div>
+                {/* Aesthetic Detail - HD Orbs */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 -mr-24 -mt-24 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 -ml-16 -mb-16 rounded-full blur-[60px] pointer-events-none"></div>
               </div>
             </motion.div>
           ))}

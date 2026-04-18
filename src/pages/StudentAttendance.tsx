@@ -108,7 +108,10 @@ const StudentAttendance = () => {
           <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
             <GraduationCap className="text-primary" /> Absensi Siswa
           </h1>
-          <p className="text-gray-500 font-medium">Lakukan pencatatan kehadiran siswa untuk hari ini.</p>
+          <p className="text-gray-500 font-medium whitespace-pre-line">
+            Lonceng kehadiran siswa. 
+            Jika siswa belum melakukan absensi mandiri ("Hadir"), guru wajib mengecek dan menginput status Sakit, Izin, atau Alpha (Tanpa Keterangan).
+          </p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-black text-slate-900">{format(new Date(), "d MMMM yyyy")}</p>
