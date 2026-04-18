@@ -118,7 +118,7 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
             <p className="text-lg text-gray-500 leading-relaxed mb-12 max-w-xl font-medium">
               SMK Prima Unggul Kota Tangerang Selatan berkomitmen mencetak generasi kompeten, berakhlak mulia, dan siap bersaing di era industri global.
             </p>
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-6 relative z-20">
               <motion.button 
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.92 }}
@@ -128,13 +128,15 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
                 Mulai Absensi Sekarang <Zap size={18} className="text-primary animate-pulse" />
               </motion.button>
               <motion.a 
-                whileHover={{ x: 5 }}
+                whileHover={{ scale: 1.1, x: 5 }}
+                whileTap={{ scale: 0.9 }}
                 href="https://maps.app.goo.gl/m2WhDZ62FqRJ5VHr8" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-5 text-gray-400 hover:text-primary transition-all group cursor-pointer font-black text-[10px] uppercase tracking-widest bg-slate-50 rounded-full"
+                className="flex items-center gap-3 px-8 py-5 text-slate-600 hover:text-primary transition-all group cursor-pointer font-black text-[11px] uppercase tracking-[0.2em] bg-white border-2 border-slate-100 rounded-full shadow-lg"
               >
-                <MapPin size={18} className="group-hover:animate-bounce text-primary" /> Tangsel, Indonesia
+                <MapPin size={20} className="group-hover:animate-bounce text-primary flex-shrink-0" /> 
+                <span className="relative z-10">Tangsel, Indonesia</span>
               </motion.a>
             </div>
           </motion.div>

@@ -174,11 +174,18 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-50 border-l-8 border-primary text-red-700 p-6 rounded-[1.8rem] flex items-center gap-5 mb-8 font-black text-sm shadow-xl"
+                className="bg-red-50 border-l-8 border-primary text-red-700 p-6 rounded-[1.8rem] flex flex-col gap-3 mb-8 shadow-xl"
                 style={{ transform: "translateZ(70px)" }}
               >
-                <ShieldAlert size={28} className="flex-shrink-0" />
-                {error}
+                <div className="flex items-center gap-5 font-black text-sm">
+                  <ShieldAlert size={28} className="flex-shrink-0" />
+                  {error}
+                </div>
+                {error.includes("Invalid login credentials") && (
+                  <p className="text-[10px] font-bold uppercase tracking-wider bg-white/50 p-3 rounded-xl border border-primary/10">
+                    Pastikan Anda sudah daftar dengan username ini. Jika baru pertama kali, gunakan menu Registrasi.
+                  </p>
+                )}
               </motion.div>
             )}
 
@@ -192,7 +199,7 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[2rem] px-10 py-6 font-black text-slate-900 outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400 text-xl shadow-inner italics"
+                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-[2rem] px-10 py-6 font-black text-slate-900 outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400 text-xl shadow-inner italic"
                   placeholder="smkprimaunggul"
                 />
               </div>
@@ -207,7 +214,7 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-[2rem] px-10 py-6 font-black text-slate-900 outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400 text-xl shadow-inner pr-20 italics"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-[2rem] px-10 py-6 font-black text-slate-900 outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all placeholder:text-slate-400 text-xl shadow-inner pr-20 italic"
                     placeholder="••••••••"
                   />
                   <button
