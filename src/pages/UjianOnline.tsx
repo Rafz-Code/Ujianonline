@@ -46,6 +46,33 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   const [violations, setViolations] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
 
+  // Real-time tracking for monitoring
+  const updateLiveStatus = async (data: any) => {
+    if (!profile?.id) return;
+    try {
+      await supabase.from('live_exam_sessions').upsert({
+        user_id: profile.id,
+        display_name: profile.display_name,
+        nisn: profile.nisn || presensiData.nisn,
+        department: profile.department || presensiData.jurusan,
+        current_question: currentQuestionIndex + 1,
+        total_questions: activeQuestions.length || 50,
+        violations: violations,
+        time_left: timeLeft,
+        updated_at: new Date().toISOString(),
+        ...data
+      });
+    } catch (err) {
+      console.error("Tracking Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isExamStarted && !isExamFinished) {
+      updateLiveStatus({});
+    }
+  }, [currentQuestionIndex, violations, isExamStarted, isExamFinished]);
+
   // Anti-Cheat Monitor
   useEffect(() => {
     if (!isExamStarted || isExamFinished) return;
@@ -183,6 +210,9 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
             }
           }
         ]);
+
+        // Clear live session after completion
+        await supabase.from('live_exam_sessions').delete().eq('user_id', profile.id);
       }
       setIsExamFinished(true);
       setShowWarning(false);

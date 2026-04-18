@@ -8,6 +8,7 @@ import {
   Filter, 
   ShieldCheck, 
   Monitor, 
+  Zap,
   UserCheck, 
   GraduationCap, 
   UserCog,
@@ -18,13 +19,41 @@ import { cn } from "../lib/utils";
 const MonitoringPage: React.FC = () => {
   const { profile } = useAuth();
   const [data, setData] = useState<any[]>([]);
+  const [liveExamSessions, setLiveExamSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
 
   useEffect(() => {
     fetchUsers();
+    fetchLiveSessions();
+
+    // Set up realtime subscription for exam monitoring
+    const channel = supabase
+      .channel('live_exams')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'live_exam_sessions' 
+      }, () => {
+        fetchLiveSessions();
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, [profile]);
+
+  const fetchLiveSessions = async () => {
+    try {
+      const { data: sessions, error } = await supabase.from('live_exam_sessions').select('*');
+      if (error) throw error;
+      setLiveExamSessions(sessions || []);
+    } catch (err) {
+      console.error("Live sessions error:", err);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -138,6 +167,59 @@ const MonitoringPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Live Exam Monitor Section */}
+      {liveExamSessions.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <div className="flex items-center gap-3">
+            <Zap size={24} className="text-primary animate-pulse" fill="currentColor" />
+            <h2 className="text-2xl font-black text-slate-800 uppercase italic">Ujian Sedang Berlangsung ({liveExamSessions.length})</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {liveExamSessions.map((session) => (
+              <div key={session.user_id} className="bg-slate-900 rounded-3xl p-6 text-white border border-white/10 shadow-xl relative overflow-hidden group">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-black text-lg tracking-tight mb-1">{session.display_name}</h4>
+                    <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">{session.nisn} • {session.department}</p>
+                  </div>
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center font-black",
+                    session.violations > 0 ? "bg-red-500 animate-bounce" : "bg-emerald-500"
+                  )}>
+                    {session.violations}
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-white/60 uppercase tracking-widest">Progres</span>
+                    <span>{session.current_question} / {session.total_questions}</span>
+                  </div>
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-500" 
+                      style={{ width: `${(session.current_question / session.total_questions) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-emerald-400">Status: Aktif</span>
+                  <span className="text-white/40 italic">Udpated {new Date(session.updated_at).toLocaleTimeString()}</span>
+                </div>
+
+                {/* Aesthetic Detail */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-primary/20 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/40 transition-all"></div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {loading ? (
         <div className="h-96 flex items-center justify-center">

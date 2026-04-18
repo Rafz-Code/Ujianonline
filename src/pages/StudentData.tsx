@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db, collection, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { Users, Plus, Trash2, Edit2, X, Check, Search, Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
@@ -19,17 +19,28 @@ const StudentData = () => {
   const [editId, setEditId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    nis: "",
-    name: "",
-    class: "X",
-    major: "TKJ"
+    nisn: "",
+    display_name: "",
+    department: "TKJ"
   });
 
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const snapshot = await getDocs(collection(db, "students"));
-      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
+      const { data, error } = await supabase
+        .from('siswa')
+        .select('*')
+        .order('display_name', { ascending: true });
+
+      if (error) throw error;
+      
+      setStudents((data || []).map(item => ({
+        id: item.id.toString(),
+        nis: item.nisn || "0000000000",
+        name: item.display_name,
+        class: "Umum", // Student table currently doesn't have class, using generic
+        major: item.department
+      } as Student)));
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,31 +54,47 @@ const StudentData = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await updateDoc(doc(db, "students", editId), { ...formData });
+        const { error } = await supabase
+          .from('siswa')
+          .update({
+            nisn: formData.nisn,
+            display_name: formData.display_name,
+            department: formData.department
+          })
+          .eq('id', editId);
+        
+        if (error) throw error;
       } else {
-        await addDoc(collection(db, "students"), {
-          ...formData,
-          createdAt: serverTimestamp()
-        });
+        const { error } = await supabase
+          .from('siswa')
+          .insert([{
+            nisn: formData.nisn,
+            display_name: formData.display_name,
+            department: formData.department,
+            username: formData.display_name.toLowerCase().replace(/\s+/g, '') // Fallback username
+          }]);
+        
+        if (error) throw error;
       }
       setIsModalOpen(false);
-      setFormData({ nis: "", name: "", class: "X", major: "TKJ" });
+      setFormData({ nisn: "", display_name: "", department: "TKJ" });
       setEditId(null);
       fetchStudents();
     } catch (err) {
-      alert("Gagal simpan data");
+      console.error(err);
+      alert("Gagal simpan data ke Supabase");
     }
   };
 
   const handleEdit = (student: Student) => {
-    setFormData({ nis: student.nis, name: student.name, class: student.class, major: student.major });
+    setFormData({ nisn: student.nis, display_name: student.name, department: student.major });
     setEditId(student.id);
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Hapus data siswa ini?")) {
-      await deleteDoc(doc(db, "students", id));
+      await supabase.from('siswa').delete().eq('id', id);
       fetchStudents();
     }
   };
@@ -82,7 +109,7 @@ const StudentData = () => {
           <p className="text-gray-500 font-medium">Kelola data seluruh siswa SMK Prima Unggul.</p>
         </div>
         <button
-          onClick={() => { setIsModalOpen(true); setEditId(null); setFormData({ nis: "", name: "", class: "X", major: "TKJ" }); }}
+          onClick={() => { setIsModalOpen(true); setEditId(null); setFormData({ nisn: "", display_name: "", department: "TKJ" }); }}
           className="bg-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-primary/20 hover:scale-105 transition-all"
         >
           <Plus size={20} /> Tambah Siswa
@@ -149,14 +176,14 @@ const StudentData = () => {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-400 mb-2">NIS</label>
+                  <label className="block text-sm font-bold text-gray-400 mb-2">NISN</label>
                   <input
                     required
                     type="text"
-                    value={formData.nis}
-                    onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                    value={formData.nisn}
+                    onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
                     className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Contoh: 2024001"
+                    placeholder="Contoh: 0012345678"
                   />
                 </div>
                 <div>
@@ -164,30 +191,18 @@ const StudentData = () => {
                   <input
                     required
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.display_name}
+                    onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                     className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="Nama lengkap siswa"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-400 mb-2">Kelas</label>
-                    <select
-                      value={formData.class}
-                      onChange={(e) => setFormData({ ...formData, class: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold outline-none"
-                    >
-                      <option value="X">X</option>
-                      <option value="XI">XI</option>
-                      <option value="XII">XII</option>
-                    </select>
-                  </div>
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-400 mb-2">Jurusan</label>
                     <select
-                      value={formData.major}
-                      onChange={(e) => setFormData({ ...formData, major: e.target.value })}
+                      value={formData.department}
+                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                       className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold outline-none"
                     >
                       <option value="TKJ">TKJ</option>

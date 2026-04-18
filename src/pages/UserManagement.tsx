@@ -31,17 +31,33 @@ const UserManagement = () => {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const handleUpdateRole = async (id: string, newRole: string) => {
+  const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', id);
+      // 1. Update Master Profile
+      const { data: userData, error: fetchError } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (fetchError) throw fetchError;
+
+      const oldRole = userData.role;
+      const { error: profileError } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+      if (profileError) throw profileError;
+
+      // 2. Synchronize Role-Specific Tables
+      const newTable = (newRole === 'siswa') ? 'siswa' : (newRole === 'guru' ? 'guru' : (newRole === 'staff' ? 'staff' : null));
+
+      if (newTable) {
+        await supabase.from(newTable).upsert({
+          id: userId,
+          display_name: userData.display_name,
+          username: userData.username,
+          department: userData.department || (newRole === 'siswa' ? 'TKJ' : (newRole === 'guru' ? 'Guru' : 'Staff'))
+        });
+      }
       
-      if (error) throw error;
       fetchUsers();
-    } catch (err) {
-      alert("Gagal update role");
+      alert(`Role ${userData.display_name} diperbarui ke ${newRole}`);
+    } catch (err: any) {
+      console.error(err);
+      alert("Gagal update role: " + err.message);
     }
   };
 
