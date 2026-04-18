@@ -149,15 +149,15 @@ const ExamResultsRecap = () => {
                     <td className="px-8 py-6 text-center">
                        <span className={cn(
                          "text-2xl font-black italic",
-                         result.score >= 75 ? "text-emerald-500" : "text-primary"
+                         result.score >= 55 ? "text-emerald-500" : "text-primary"
                        )}>{result.score.toFixed(1)}</span>
                     </td>
                     <td className="px-8 py-6 text-right">
                        <span className={cn(
                          "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                         result.score >= 75 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                         result.score >= 55 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                        )}>
-                         {result.score >= 75 ? "LULUS" : "REMIDIAL"}
+                         {result.score >= 55 ? "LULUS" : "REMIDIAL"}
                        </span>
                     </td>
                   </tr>

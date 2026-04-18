@@ -8,7 +8,7 @@ interface UserProfile {
   username?: string;
   display_name: string;
   photo_url: string;
-  role: 'admin' | 'guru' | 'siswa';
+  role: 'admin' | 'guru' | 'siswa' | 'staff';
   department?: string;
   nisn?: string;
   passing_status?: 'Lulus' | 'Tidak Lulus' | 'Proses';
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin: profile?.role === 'admin',
     isGuru: profile?.role === 'guru',
     isSiswa: profile?.role === 'siswa',
-    isStaff: profile?.role === 'guru' || profile?.role === 'admin'
+    isStaff: profile?.role === 'staff' || profile?.role === 'guru' || profile?.role === 'admin'
   };
 
   return (

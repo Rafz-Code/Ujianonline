@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, ArrowRight, ShieldCheck, User, LogOut, GraduationCap } from "lucide-react";
+import { Zap, LayoutDashboard, ArrowRight, ShieldCheck, User, LogOut, GraduationCap, Monitor } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 
@@ -37,6 +37,16 @@ const HubPage: React.FC<PageProps> = ({ navigate }) => {
       shadow: "shadow-primary/30",
       featured: true,
       show: true
+    },
+    {
+      title: "Monitoring",
+      desc: "Pantau Aktivitas Siswa & Guru Secara Real-Time",
+      path: "/app/monitoring",
+      icon: Monitor,
+      color: "bg-blue-600",
+      shadow: "shadow-blue-200",
+      featured: false,
+      show: profile?.role !== 'siswa'
     },
     {
       title: "Sistem Administrasi",

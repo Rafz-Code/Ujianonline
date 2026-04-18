@@ -8,6 +8,30 @@ interface PageProps {
   navigate: (path: string) => void;
 }
 
+const BackgroundOrbs = React.memo(() => (
+  <>
+    {/* Background Orbs - HD 3D Style */}
+    <motion.div 
+      animate={{ 
+        scale: [1, 1.2, 1],
+        x: [0, 100, 0],
+        y: [0, -50, 0]
+      }}
+      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10"
+    ></motion.div>
+    <motion.div 
+      animate={{ 
+        scale: [1.2, 1, 1.2],
+        x: [0, -100, 0],
+        y: [0, 50, 0]
+      }}
+      transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+      className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[140px] -z-10"
+    ></motion.div>
+  </>
+));
+
 const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -15,7 +39,7 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<'siswa' | 'guru'>('siswa');
+  const [role, setRole] = useState<'siswa' | 'guru' | 'staff'>('siswa');
   const [major, setMajor] = useState("TKJ");
   const [nisn, setNisn] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -39,20 +63,51 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            display_name: displayName || username,
-            role: finalRole,
-            department: finalRole === 'siswa' ? major : 'General',
-            nisn: finalRole === 'siswa' ? nisn : null,
-          }
-        }
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        // Handle specific "Database error" or "Rate limit" by providing more context
+        if (signUpError.message.includes("Database error")) {
+          throw new Error("Sistem Database Sedang Sibuk atau Konfigurasi Belum Siap. Pastikan Tabel Profil, Siswa, Guru, dan Staff Sudah Ada.");
+        }
+        if (signUpError.message.toLowerCase().includes("rate limit exceeded")) {
+          throw new Error("Terlalu banyak permintaan pendaftaran. Silakan tunggu 1-2 menit sebelum mencoba lagi (Limit Keamanan Email).");
+        }
+        throw signUpError;
+      }
 
       if (data.user) {
-        // Successful signup, Supabase trigger will handle profile creation
+        // 1. Unified Master Profile (The core identity record)
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: data.user.id,
+          display_name: displayName || username,
+          role: finalRole,
+          department: (finalRole === 'siswa') ? major : (finalRole === 'guru' ? 'Guru' : (finalRole === 'staff' ? 'Staff' : 'Admin')),
+          nisn: finalRole === 'siswa' ? nisn : null,
+          username: username.toLowerCase()
+        });
+
+        // 2. Role-Specific Data Tables (Partitioning data as requested by user)
+        const roleTable = (finalRole === 'siswa') ? 'siswa' : (finalRole === 'guru' ? 'guru' : (finalRole === 'staff' ? 'staff' : null));
+        
+        if (roleTable) {
+          const { error: roleSpecificError } = await supabase.from(roleTable).upsert({
+            id: data.user.id,
+            display_name: displayName || username,
+            username: username.toLowerCase(),
+            department: (finalRole === 'siswa') ? major : (finalRole === 'guru' ? 'Guru' : 'Staff'),
+            ...(finalRole === 'siswa' && { nisn })
+          });
+          
+          if (roleSpecificError) {
+            console.warn(`Note: Failed to save to ${roleTable} table, likely missing table in Supabase.`, roleSpecificError);
+          }
+        }
+
+        if (profileError) {
+          console.warn("Profile sync warning:", profileError);
+        }
+
         navigate("/login");
         alert("Pendaftaran berhasil! Silakan masuk ke akun Anda.");
       }
@@ -66,25 +121,7 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden perspective-[2000px]">
-      {/* Background Orbs - HD 3D Style */}
-      <motion.div 
-        animate={{ 
-          scale: [1, 1.2, 1],
-          x: [0, 100, 0],
-          y: [0, -50, 0]
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10"
-      ></motion.div>
-      <motion.div 
-        animate={{ 
-          scale: [1.2, 1, 1.2],
-          x: [0, -100, 0],
-          y: [0, 50, 0]
-        }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[140px] -z-10"
-      ></motion.div>
+      <BackgroundOrbs />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, rotateX: 10 }}
@@ -194,19 +231,19 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2 text-center block w-full">
                 Sistem Identifikasi Peran
               </label>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-4">
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02, y: -5 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setRole('siswa')}
                   className={cn(
-                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform",
+                    "p-6 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-colors transform",
                     role === 'siswa' ? "border-primary bg-red-50 text-primary shadow-xl shadow-primary/10" : "border-gray-50 bg-gray-50/50 hover:border-gray-100 text-gray-400"
                   )}
                 >
-                  <GraduationCap size={40} />
-                  <span className="font-black text-xs uppercase italic tracking-widest">Siswa Siswi</span>
+                  <GraduationCap size={32} />
+                  <span className="font-black text-[10px] uppercase italic tracking-[0.2em]">Siswa</span>
                 </motion.button>
                 <motion.button
                   type="button"
@@ -214,12 +251,25 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setRole('guru')}
                   className={cn(
-                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform",
+                    "p-6 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-colors transform",
                     role === 'guru' ? "border-primary bg-red-50 text-primary shadow-xl shadow-primary/10" : "border-gray-50 bg-gray-50/50 hover:border-gray-100 text-gray-400"
                   )}
                 >
-                  <UserCog size={40} />
-                  <span className="font-black text-xs uppercase italic tracking-widest">Guru Karyawan</span>
+                  <UserCog size={32} />
+                  <span className="font-black text-[10px] uppercase italic tracking-[0.2em]">Guru</span>
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setRole('staff')}
+                  className={cn(
+                    "p-6 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-colors transform",
+                    role === 'staff' ? "border-primary bg-red-50 text-primary shadow-xl shadow-primary/10" : "border-gray-50 bg-gray-50/50 hover:border-gray-100 text-gray-400"
+                  )}
+                >
+                  <User size={32} />
+                  <span className="font-black text-[10px] uppercase italic tracking-[0.2em]">Staff</span>
                 </motion.button>
               </div>
             </div>

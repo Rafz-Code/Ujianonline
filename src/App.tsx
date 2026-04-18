@@ -14,6 +14,7 @@ import HubPage from "./pages/HubPage";
 import UjianOnline from "./pages/UjianOnline";
 import ExamResultsRecap from "./pages/ExamResultsRecap";
 import SettingsPage from "./pages/SettingsPage";
+import MonitoringPage from "./pages/MonitoringPage";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const Router = () => {
@@ -78,6 +79,8 @@ const Router = () => {
       return <AppLayout navigate={navigate}><ExamResultsRecap /></AppLayout>;
     case "/app/settings":
       return <AppLayout navigate={navigate}><SettingsPage /></AppLayout>;
+    case "/app/monitoring":
+      return <AppLayout navigate={navigate}><MonitoringPage /></AppLayout>;
     default:
       if (currentPath.startsWith("/app/")) {
         return <AppLayout navigate={navigate}><Dashboard /></AppLayout>;

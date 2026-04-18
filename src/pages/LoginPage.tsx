@@ -8,6 +8,55 @@ interface PageProps {
   navigate: (path: string) => void;
 }
 
+const HeaderInfo = React.memo(({ currTime }: { currTime: Date }) => (
+  <div className="text-center mb-12" style={{ transform: "translateZ(100px)" }}>
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.2 }}
+    >
+      <h2 className="text-primary font-black tracking-[0.4em] uppercase text-xs mb-4 flex items-center justify-center gap-3">
+        <Zap size={16} fill="currentColor" className="animate-pulse" /> PORTAL AKADEMIK DIGITAL
+      </h2>
+      <h1 className="text-white text-5xl lg:text-7xl font-black mb-8 leading-tight tracking-tighter drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)]">
+        SMK Prima <span className="text-primary">Unggul</span> <br/>
+        <span className="text-3xl text-white/40 italic font-medium block mt-2">Intelligence & Integrity</span>
+      </h1>
+    </motion.div>
+    
+    <div className="flex items-center justify-center gap-8 text-white font-black text-sm bg-black/40 backdrop-blur-3xl rounded-[2.5rem] py-5 px-10 inline-flex mx-auto border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transform rotate-x-6">
+      <span className="flex items-center gap-3"><Calendar size={20} className="text-primary" /> {format(currTime, "d MMM yyyy")}</span>
+      <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+      <span className="flex items-center gap-3"><Clock size={20} className="text-primary" /> {format(currTime, "HH:mm:ss")}</span>
+    </div>
+  </div>
+));
+
+const BackgroundEffects = React.memo(() => (
+  <>
+    {/* Optimized Background Elements - Simplified Blurs for performance */}
+    <motion.div 
+      animate={{ 
+        x: [0, 40, 0, -40, 0],
+        y: [0, -30, 0, 30, 0],
+        scale: [1, 1.05, 1]
+      }}
+      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] -z-10"
+    ></motion.div>
+    
+    <motion.div 
+      animate={{ 
+        x: [0, -60, 0, 60, 0],
+        y: [0, 40, 0, -40, 0],
+        scale: [1.05, 1, 1.05]
+      }}
+      transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+      className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-red-900/10 rounded-full blur-[100px] -z-10"
+    ></motion.div>
+  </>
+));
+
 const LoginPage: React.FC<PageProps> = ({ navigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,23 +66,28 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Use a simpler approach for 3D card to prevent typing lag
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // Throttled calculation to prevent lag
-    requestAnimationFrame(() => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-      const x = (clientX / innerWidth - 0.5) * 15;
-      const y = (clientY / innerHeight - 0.5) * -15;
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * -10;
       setMousePos({ x, y });
-    });
-  };
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
 
   useEffect(() => {
+    // Proactive session check to speed up access for already logged in users
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/hub");
+    });
+    
     const timer = setInterval(() => setCurrTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [navigate]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -76,7 +130,11 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
     } catch (err: any) {
       console.error("Login Error:", err);
       if (err.message === "Invalid login credentials") {
-        setError("Username atau password salah. Silakan cek kembali.");
+        if (username.toLowerCase() === 'smkprimaunggul') {
+          setError("Akun Admin 'smkprimaunggul' belum terdaftar. Anda HARUS melakukan Registrasi Akun Baru terlebih dahulu.");
+        } else {
+          setError("Username atau password salah. Pastikan Anda sudah terdaftar.");
+        }
       } else {
         setError(err.message || "Terjadi kesalahan saat masuk. Silakan coba lagi.");
       }
@@ -87,29 +145,9 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
 
   return (
     <div 
-      onMouseMove={handleMouseMove}
       className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden perspective-[2000px]"
     >
-      {/* Optimized Background Elements - Simplified Blurs for performance */}
-      <motion.div 
-        animate={{ 
-          x: [0, 40, 0, -40, 0],
-          y: [0, -30, 0, 30, 0],
-          scale: [1, 1.05, 1]
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] -z-10"
-      ></motion.div>
-      
-      <motion.div 
-        animate={{ 
-          x: [0, -60, 0, 60, 0],
-          y: [0, 40, 0, -40, 0],
-          scale: [1.05, 1, 1.05]
-        }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-red-900/10 rounded-full blur-[100px] -z-10"
-      ></motion.div>
+      <BackgroundEffects />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
@@ -118,34 +156,13 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
         className="w-full max-w-xl relative z-10"
         style={{ transformStyle: "preserve-3d" }}
       >
-        {/* Header Info - Elevated 3D */}
-        <div className="text-center mb-12" style={{ transform: "translateZ(100px)" }}>
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2 className="text-primary font-black tracking-[0.4em] uppercase text-xs mb-4 flex items-center justify-center gap-3">
-              <Zap size={16} fill="currentColor" className="animate-pulse" /> PORTAL AKADEMIK DIGITAL
-            </h2>
-            <h1 className="text-white text-5xl lg:text-7xl font-black mb-8 leading-tight tracking-tighter drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)]">
-              SMK Prima <span className="text-primary">Unggul</span> <br/>
-              <span className="text-3xl text-white/40 italic font-medium block mt-2">Intelligence & Integrity</span>
-            </h1>
-          </motion.div>
-          
-          <div className="flex items-center justify-center gap-8 text-white font-black text-sm bg-black/40 backdrop-blur-3xl rounded-[2.5rem] py-5 px-10 inline-flex mx-auto border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transform rotate-x-6">
-            <span className="flex items-center gap-3"><Calendar size={20} className="text-primary" /> {format(currTime, "d MMM yyyy")}</span>
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-            <span className="flex items-center gap-3"><Clock size={20} className="text-primary" /> {format(currTime, "HH:mm:ss")}</span>
-          </div>
-        </div>
+        <HeaderInfo currTime={currTime} />
 
         {/* Login Card with INTENSE 3D Effect */}
         <motion.div 
           animate={{ rotateY: mousePos.x, rotateX: mousePos.y }}
           transition={{ type: "spring", stiffness: 150, damping: 25 }}
-          className="rounded-[4.5rem] p-1.5 bg-gradient-to-br from-white/20 via-white/10 to-transparent backdrop-blur-[30px] shadow-[0_60px_120px_-20px_rgba(0,0,0,0.8)] overflow-hidden relative border border-white/15 transition-all duration-300 ease-out"
+          className="rounded-[4.5rem] p-1.5 bg-gradient-to-br from-white/20 via-white/10 to-transparent backdrop-blur-[30px] shadow-[0_60px_120px_-20px_rgba(0,0,0,0.8)] overflow-hidden relative border border-white/15 transition-all duration-300 ease-out will-change-transform"
           style={{ transformStyle: "preserve-3d" }}
         >
           <div className="bg-white rounded-[4rem] p-12 lg:p-16 relative overflow-hidden ring-1 ring-black/5" style={{ transform: "translateZ(50px)" }}>
@@ -220,7 +237,7 @@ const LoginPage: React.FC<PageProps> = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-all p-2 rounded-xl hover:bg-red-50"
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-2 rounded-xl hover:bg-red-50 z-20"
                   >
                     {showPassword ? <Zap size={24} fill="currentColor" /> : <Clock size={24} />}
                   </button>

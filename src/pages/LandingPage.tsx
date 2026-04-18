@@ -82,7 +82,7 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
   const [selectedMajor, setSelectedMajor] = useState<typeof majors[0] | null>(null);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-primary/20" onClick={announceWelcome}>
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-primary/20">
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -122,7 +122,10 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.92 }}
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  navigate("/login");
+                  announceWelcome();
+                }}
                 className="bg-slate-900 text-white px-10 py-5 rounded-[2.2rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-black transition-all shadow-2xl shadow-slate-200 flex items-center gap-4"
               >
                 Mulai Absensi Sekarang <Zap size={18} className="text-primary animate-pulse" />

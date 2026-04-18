@@ -22,9 +22,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
-import { examQuestions, Question } from "../data/questions";
+import { questionsByMajor, Question } from "../data/questions";
 import { supabase } from "../lib/supabase";
-import { db, serverTimestamp, setDoc, doc, collection, addDoc } from "../lib/firebase";
 
 const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   const { profile } = useAuth();
@@ -34,7 +33,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   const [presensiData, setPresensiData] = useState({
     name: profile?.display_name || "",
     nisn: profile?.nisn || "",
-    jurusan: profile?.department || ""
+    jurusan: (profile?.department as keyof typeof questionsByMajor) || "TKJ"
   });
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -43,6 +42,44 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes
   const [loading, setLoading] = useState(false);
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
+  const [violations, setViolations] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+
+  // Anti-Cheat Monitor
+  useEffect(() => {
+    if (!isExamStarted || isExamFinished) return;
+
+    const handleViolation = () => {
+      setViolations((prev) => {
+        const next = prev + 1;
+        if (next >= 3) {
+          finishExam(true); // Terminate exam on 3rd violation
+          return next;
+        }
+        setShowWarning(true);
+        return next;
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation();
+      }
+    };
+
+    const onBlur = () => {
+      handleViolation();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("blur", onBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [isExamStarted, isExamFinished]);
 
   // Sync profile data if it loads later
   useEffect(() => {
@@ -50,27 +87,28 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
       setPresensiData({
         name: profile.display_name || "",
         nisn: profile.nisn || "",
-        jurusan: profile.department || ""
+        jurusan: (profile.department as keyof typeof questionsByMajor) || "TKJ"
       });
     }
   }, [profile]);
   
-  // Daily Question Shuffling
-  const activeQuestions = React.useMemo(() => {
-    const dateStr = new Date().toISOString().split('T')[0];
-    let seed = 0;
-    for (let i = 0; i < dateStr.length; i++) {
-      seed += dateStr.charCodeAt(i);
-    }
+  const startExam = () => {
+    // Generate fresh set of 50 questions for this session
+    const major = presensiData.jurusan || "TKJ";
+    const majorPool = questionsByMajor[major] || questionsByMajor["TKJ"];
     
-    const shuffled = [...examQuestions];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor((seed * (i + 1)) % (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    }
-    return shuffled;
-  }, []);
+    // Truly random shuffle for "setiap soal diganti terus"
+    const shuffled = [...majorPool].sort(() => Math.random() - 0.5);
+    
+    setActiveQuestions(shuffled.slice(0, 50));
+    setIsExamStarted(true);
+    setCurrentQuestionIndex(0);
+    setUserAnswers({});
+    setIsExamFinished(false);
+    setTimeLeft(3600);
+    setViolations(0);
+    setShowWarning(false);
+  };
 
   useEffect(() => {
     let timer: any;
@@ -78,19 +116,11 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isExamStarted && !isExamFinished) {
       finishExam();
     }
     return () => clearInterval(timer);
   }, [isExamStarted, isExamFinished, timeLeft]);
-
-  const startExam = () => {
-    setIsExamStarted(true);
-    setCurrentQuestionIndex(0);
-    setUserAnswers({});
-    setIsExamFinished(false);
-    setTimeLeft(3600);
-  };
 
   const handlePresensi = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,11 +129,16 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
     }
   };
 
+  // Optimized Answer Selection
   const handleAnswerSelect = (optionIndex: number) => {
-    setUserAnswers({
-      ...userAnswers,
-      [activeQuestions[currentQuestionIndex].id]: optionIndex
-    });
+    const questionId = activeQuestions[currentQuestionIndex].id;
+    // Fast state update
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: optionIndex
+    }));
+    
+    // Auto-advance after small delay for speed? No, user didn't ask for auto-advance, just fast selection.
   };
 
   const nextQuestion = () => {
@@ -118,7 +153,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
     }
   };
 
-  const finishExam = async () => {
+  const finishExam = async (isCheatDisqualified = false) => {
     setLoading(true);
     let correctCount = 0;
     activeQuestions.forEach((q) => {
@@ -127,7 +162,8 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
       }
     });
 
-    const finalScore = (correctCount / activeQuestions.length) * 100;
+    // If disqualified, score is 0
+    const finalScore = isCheatDisqualified ? 0 : (correctCount / activeQuestions.length) * 100;
     setScore(finalScore);
 
     try {
@@ -140,11 +176,16 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
             user_major: presensiData.jurusan,
             nisn: presensiData.nisn,
             score: finalScore,
-            is_passed: finalScore >= 75
+            is_passed: finalScore >= 55, // Updated KKM to 55
+            metadata: {
+              violations: violations,
+              disqualified: isCheatDisqualified
+            }
           }
         ]);
       }
       setIsExamFinished(true);
+      setShowWarning(false);
     } catch (err) {
       console.error("Error saving exam results:", err);
     } finally {
@@ -192,9 +233,9 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
               </div>
               <div className={cn(
                 "py-3 px-6 rounded-full inline-block mx-auto font-black uppercase italic tracking-widest",
-                score >= 75 ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
+                score >= 55 ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
               )}>
-                {score >= 75 ? "LULUS" : "TIDAK LULUS"}
+                {score >= 55 ? "LULUS" : "TIDAK LULUS"}
               </div>
             </div>
           </div>
@@ -290,7 +331,7 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
               
               {currentQuestionIndex === activeQuestions.length - 1 ? (
                 <button
-                  onClick={finishExam}
+                  onClick={() => finishExam()}
                   disabled={loading}
                   className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 shadow-primary/30 uppercase italic"
                 >
@@ -336,6 +377,41 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
             </div>
           </div>
         </div>
+
+        {/* Floating Warning within Exam Started View to ensure Visibility */}
+        <AnimatePresence>
+          {showWarning && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-sm bg-black/40">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className={cn(
+                  "max-w-md w-full rounded-[2.5rem] p-10 text-center shadow-3xl border-4",
+                  darkMode ? "bg-slate-900 border-red-500/50" : "bg-white border-red-500"
+                )}
+              >
+                <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                  <AlertCircle size={40} />
+                </div>
+                <h2 className="text-2xl font-black text-red-600 uppercase italic mb-4">Peringatan Pelanggaran!</h2>
+                <p className={cn("font-bold mb-8", darkMode ? "text-slate-300" : "text-slate-600")}>
+                  Dilarang meninggalkan halaman ujian! Anda terpantau keluar dari tab. 
+                  <br /><br />
+                  <span className="text-red-500 font-black">Peringatan: {violations} / 3</span>
+                  <br />
+                  Jika mencapai 3 kali, Anda akan didiskualifikasi otomatis.
+                </p>
+                <button
+                  onClick={() => setShowWarning(false)}
+                  className="w-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 py-4 rounded-2xl font-black uppercase italic tracking-widest hover:scale-105 transition-all"
+                >
+                  SAYA MENGERTI
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -345,6 +421,41 @@ const UjianOnline = ({ navigate }: { navigate: (path: string) => void }) => {
       "w-full space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 relative z-0 min-h-full",
       darkMode ? "bg-slate-950" : "bg-gray-50/50"
     )}>
+      {/* Warning Modal */}
+      <AnimatePresence>
+        {showWarning && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-sm bg-black/40">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className={cn(
+                "max-w-md w-full rounded-[2.5rem] p-10 text-center shadow-3xl border-4",
+                darkMode ? "bg-slate-900 border-red-500/50" : "bg-white border-red-500"
+              )}
+            >
+              <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <AlertCircle size={40} />
+              </div>
+              <h2 className="text-2xl font-black text-red-600 uppercase italic mb-4">Peringatan Pelanggaran!</h2>
+              <p className={cn("font-bold mb-8", darkMode ? "text-slate-300" : "text-slate-600")}>
+                Dilarang meninggalkan halaman ujian! Anda terpantau keluar dari tab. 
+                <br /><br />
+                <span className="text-red-500 font-black">Peringatan: {violations} / 3</span>
+                <br />
+                Jika mencapai 3 kali, Anda akan didiskualifikasi otomatis.
+              </p>
+              <button
+                onClick={() => setShowWarning(false)}
+                className="w-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 py-4 rounded-2xl font-black uppercase italic tracking-widest hover:scale-105 transition-all"
+              >
+                SAYA MENGERTI
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       {!hasPresensi ? (
         <div className="max-w-2xl mx-auto py-12 px-6">
