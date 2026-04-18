@@ -34,6 +34,12 @@ const StaffAttendance = () => {
     checkAttendance();
   }, [user]);
 
+  const speak = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'id-ID';
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleAttendance = async () => {
     if (!user) return;
     setSubmitting(true);
@@ -54,6 +60,7 @@ const StaffAttendance = () => {
       if (error) throw error;
 
       setAttendedToday(true);
+      speak(`Selamat datang ${profile?.display_name || 'Staff'}. Absensi Anda hari ini berhasil disimpan ke sistem pusat.`);
     } catch (error) {
       console.error("Attendance Error:", error);
       alert("Gagal melakukan absensi. Pastikan koneksi internet stabil.");

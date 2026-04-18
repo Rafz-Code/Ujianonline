@@ -24,29 +24,33 @@ const StudentAttendance = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  const speak = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'id-ID';
+    window.speechSynthesis.speak(utterance);
+  };
+
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('students')
+          .from('siswa')
           .select('*')
-          .eq('major', selectedMajor)
-          .eq('class', selectedClass);
+          .eq('department', selectedMajor);
 
         if (error) throw error;
         
         const list = (data || []).map(item => ({
           id: item.id.toString(),
-          nis: item.nis,
-          name: item.name,
-          class: item.class,
-          major: item.major
+          nis: item.nisn || "0000000000",
+          name: item.display_name,
+          class: selectedClass,
+          major: item.department
         } as Student));
 
         setStudents(list);
         
-        // Initialize attendance state
         const initial: Record<string, string> = {};
         list.forEach(s => initial[s.id] = "hadir");
         setAttendance(initial);
@@ -86,6 +90,7 @@ const StudentAttendance = () => {
       });
       await Promise.all(batch);
       setSubmitted(true);
+      speak(`Absensi kelas ${selectedClass} ${selectedMajor} berhasil disimpan. Terima kasih.`);
     } catch (err) {
       console.error(err);
       alert("Gagal simpan absensi.");

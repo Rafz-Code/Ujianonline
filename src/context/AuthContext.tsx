@@ -23,6 +23,7 @@ interface AuthContextType {
   isGuru: boolean;
   isSiswa: boolean;
   isStaff: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,7 +33,8 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isGuru: false,
   isSiswa: false,
-  isStaff: false
+  isStaff: false,
+  refreshProfile: async () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -41,6 +43,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.warn("Profile not found for user:", uid);
+        } else {
+          throw error;
+        }
+      } else {
+        setProfile(data as UserProfile);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) await fetchProfile(user.id);
+  };
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -55,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setSession();
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
+    // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
@@ -69,38 +97,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
+    // Realtime subscription for the current user's profile
+    let profileSubscription: any = null;
+    
+    if (user?.id) {
+      profileSubscription = supabase
+        .channel(`public:profiles:id=eq.${user.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'profiles',
+          filter: `id=eq.${user.id}` 
+        }, (payload: any) => {
+          setProfile(payload.new as UserProfile);
+        })
+        .subscribe();
+    }
+
     return () => {
       subscription.unsubscribe();
+      if (profileSubscription) profileSubscription.unsubscribe();
     };
-  }, []);
-
-  const fetchProfile = async (uid: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', uid)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist yet, wait for trigger or manual creation
-          console.warn("Profile not found for user:", uid);
-        } else {
-          throw error;
-        }
-      } else {
-        setProfile(data as UserProfile);
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-    }
-  };
+  }, [user?.id]);
 
   const value = {
     user,
     profile,
     loading,
+    refreshProfile,
     isAdmin: profile?.role === 'admin',
     isGuru: profile?.role === 'guru',
     isSiswa: profile?.role === 'siswa',

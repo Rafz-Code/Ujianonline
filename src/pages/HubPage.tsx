@@ -12,6 +12,15 @@ interface PageProps {
 const HubPage: React.FC<PageProps> = ({ navigate }) => {
   const { profile } = useAuth();
 
+  React.useEffect(() => {
+    if (profile?.display_name) {
+      const msg = `Selamat datang di hub pusat SMK Prima Unggul, ${profile.display_name}. Akses sistem akademik Anda telah aktif.`;
+      const utterance = new SpeechSynthesisUtterance(msg);
+      utterance.lang = 'id-ID';
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [profile?.display_name]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");

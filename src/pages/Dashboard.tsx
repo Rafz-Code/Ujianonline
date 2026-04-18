@@ -29,12 +29,37 @@ const data = [
 ];
 
 const Dashboard = () => {
-  const { profile, isAdmin, isGuru } = useAuth();
+  const { profile } = useAuth();
+  const [counts, setCounts] = useState({ siswa: 0, staff: 0, guru: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const { count: siswaCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'siswa');
+        const { count: guruCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru');
+        const { count: staffCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'staff');
+        
+        setCounts({
+          siswa: siswaCount || 0,
+          guru: guruCount || 0,
+          staff: staffCount || 0,
+          total: (siswaCount || 0) + (guruCount || 0) + (staffCount || 0)
+        });
+      } catch (err) {
+        console.error("Dashboard Stats Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCounts();
+  }, []);
 
   const stats = [
-    { name: "Staff Aktif", value: "42", icon: UserCheck, color: "text-blue-600", bg: "bg-blue-100" },
-    { name: "Total Siswa", value: "856", icon: Users, icon2: GraduationCap, color: "text-red-600", bg: "bg-red-100" },
-    { name: "Kehadiran Hari Ini", value: "94%", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-100" },
+    { name: "Staff & Guru", value: (counts.staff + counts.guru).toString(), icon: UserCheck, color: "text-blue-600", bg: "bg-blue-100" },
+    { name: "Total Siswa", value: counts.siswa.toString(), icon: Users, icon2: GraduationCap, color: "text-red-600", bg: "bg-red-100" },
+    { name: "Total Pengguna", value: counts.total.toString(), icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-100" },
   ];
 
   return (

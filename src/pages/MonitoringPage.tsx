@@ -199,13 +199,13 @@ const MonitoringPage: React.FC = () => {
               {/* HD Decorative Orb */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
               
-              <div className="flex flex-col gap-3 mt-8">
+                  <div className="flex flex-col gap-3 mt-8">
                 {profile?.role === 'admin' && (
                   <div className="flex gap-2">
                     {['siswa', 'guru', 'staff', 'admin'].filter(r => r !== user.role).map(roleOption => (
                       <button
                         key={roleOption}
-                        onClick={() => updateUserRole(user.user_id, roleOption)}
+                        onClick={() => updateUserRole(user.id, roleOption)}
                         className="flex-1 bg-slate-100 hover:bg-slate-900 hover:text-white transition-all py-2 rounded-xl text-[8px] font-black uppercase tracking-tighter"
                       >
                         Set to {roleOption}
