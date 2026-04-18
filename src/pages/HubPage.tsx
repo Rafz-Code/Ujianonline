@@ -129,13 +129,15 @@ const HubPage: React.FC<PageProps> = ({ navigate }) => {
               key={opt.path}
               initial={{ opacity: 0, scale: 0.8, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
+              whileHover={{ scale: 1.05, y: -10 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }}
               onClick={() => navigate(opt.path)}
               className="group cursor-pointer"
               style={{ transformStyle: "preserve-3d" }}
             >
               <div className={cn(
-                "h-full p-12 rounded-[4rem] text-white flex flex-col justify-between transition-all hover:scale-[1.05] active:scale-95 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] relative overflow-hidden border border-white/20",
+                "h-full p-12 rounded-[4rem] text-white flex flex-col justify-between transition-all shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] relative overflow-hidden border border-white/20",
                 opt.color,
                 opt.shadow
               )} style={{ transform: "translateZ(50px)" }}>

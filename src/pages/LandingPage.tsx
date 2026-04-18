@@ -86,98 +86,109 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">S</div>
-          <span className="font-extrabold text-xl tracking-tight">SMK Prima <span className="text-primary">Unggul</span></span>
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20">S</div>
+          <span className="font-extrabold text-xl tracking-tight text-slate-900 uppercase italic">SMK Prima <span className="text-primary">Unggul</span></span>
         </div>
-        <button 
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => navigate("/login")}
-          className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+          className="bg-primary text-white px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
         >
-          Masuk Aplikasi <ArrowRight size={18} />
-        </button>
+          Masuk Aplikasi <ArrowRight size={16} />
+        </motion.button>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto overflow-hidden">
+      <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 bg-red-50 text-primary px-4 py-1.5 rounded-full text-sm font-bold mb-6">
-              <ShieldCheck size={16} /> Terakreditasi Unggul
+            <div className="inline-flex items-center gap-2 bg-red-50 text-primary px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-8 shadow-sm">
+              <ShieldCheck size={16} className="text-primary" /> Terakreditasi Unggul
             </div>
-            <h1 className="text-6xl lg:text-7xl font-black leading-[1.1] mb-8 tracking-tighter">
-              Pusat Keunggulan <br/>
-              <span className="text-primary">Masa Depan Digital</span>
+            <h1 className="text-6xl lg:text-8xl font-black leading-[0.95] mb-10 tracking-tighter text-slate-900 uppercase italic drop-shadow-sm">
+              PUSAT <br/>
+              <span className="text-primary">KEUNGGULAN</span> <br/>
+              <span className="text-4xl lg:text-5xl text-slate-400 opacity-50 block mt-4">MASA DEPAN DIGITAL</span>
             </h1>
-            <p className="text-xl text-gray-500 leading-relaxed mb-10 max-w-xl">
+            <p className="text-lg text-gray-500 leading-relaxed mb-12 max-w-xl font-medium">
               SMK Prima Unggul Kota Tangerang Selatan berkomitmen mencetak generasi kompeten, berakhlak mulia, dan siap bersaing di era industri global.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <button 
+            <div className="flex flex-wrap gap-6">
+              <motion.button 
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => navigate("/login")}
-                className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                className="bg-slate-900 text-white px-10 py-5 rounded-[2.2rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-black transition-all shadow-2xl shadow-slate-200 flex items-center gap-4"
               >
-                Mulai Absensi Sekarang
-              </button>
-              <a 
+                Mulai Absensi Sekarang <Zap size={18} className="text-primary animate-pulse" />
+              </motion.button>
+              <motion.a 
+                whileHover={{ x: 5 }}
                 href="https://maps.app.goo.gl/m2WhDZ62FqRJ5VHr8" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-4 text-gray-400 hover:text-primary transition-colors group cursor-pointer"
+                className="flex items-center gap-3 px-6 py-5 text-gray-400 hover:text-primary transition-all group cursor-pointer font-black text-[10px] uppercase tracking-widest bg-slate-50 rounded-full"
               >
-                <MapPin size={20} className="group-hover:animate-bounce" /> Tangsel, Indonesia
-              </a>
+                <MapPin size={18} className="group-hover:animate-bounce text-primary" /> Tangsel, Indonesia
+              </motion.a>
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
+            initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             className="relative"
           >
-            <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl rotate-2 border-8 border-white">
+            <div className="relative z-10 rounded-[4rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.15)] rotate-3 border-[12px] border-white transform hover:rotate-0 transition-all duration-700">
               <img 
-                src="https://picsum.photos/seed/school/800/800" 
+                src="https://picsum.photos/seed/smkpu/1000/1000" 
                 alt="SMK PU Student" 
-                className="w-full aspect-square object-cover"
+                className="w-full aspect-[4/5] object-cover scale-110 hover:scale-100 transition-transform duration-1000"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-red-100 rounded-full blur-[100px] -z-10 opacity-60"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-primary/5 rounded-full blur-[80px] -z-10 opacity-60"></div>
           </motion.div>
         </div>
       </section>
 
       {/* Majors Section */}
-      <section className="py-24 bg-gray-50 px-6">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-4xl font-black mb-4">6 Program Keahlian</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">Kami menyediakan jurusan yang relevan dengan kebutuhan industri masa kini untuk memastikan keterserapan lulusan yang tinggi.</p>
+      <section className="py-32 bg-slate-50/50 px-6">
+        <div className="max-w-7xl mx-auto text-center mb-20">
+          <h2 className="text-5xl lg:text-7xl font-black mb-6 tracking-tighter uppercase italic text-slate-900">Program Keahlian</h2>
+          <div className="h-1.5 w-24 bg-primary mx-auto rounded-full mb-8"></div>
+          <p className="text-gray-500 max-w-2xl mx-auto font-bold uppercase tracking-widest text-xs opacity-60">Kurikulum berbasis industri masa depan</p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {majors.map((major, idx) => (
             <motion.div
               key={major.name}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -10 }}
+              whileTap={{ scale: 0.98 }}
               transition={{ delay: idx * 0.1 }}
               viewport={{ once: true }}
               onClick={() => setSelectedMajor(major)}
-              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer"
+              className="bg-white p-10 rounded-[3.5rem] border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)] transition-all group cursor-pointer relative overflow-hidden"
             >
-              <div className={`${major.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 transform group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
-                <major.icon size={28} />
+              <div className={`${major.color} w-16 h-16 rounded-[1.8rem] flex items-center justify-center text-white mb-8 transform group-hover:rotate-12 transition-transform shadow-xl`}>
+                <major.icon size={32} />
               </div>
-              <h3 className="text-2xl font-black mb-2">{major.name}</h3>
-              <p className="text-gray-500 font-medium mb-4">{major.full}</p>
-              <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest group-hover:gap-3 transition-all">
-                Selengkapnya <ArrowRight size={14} />
+              <h3 className="text-3xl font-black mb-3 tracking-tight">{major.name}</h3>
+              <p className="text-gray-400 font-bold mb-6 text-sm italic">{major.full}</p>
+              <div className="flex items-center gap-3 text-primary font-black text-[10px] uppercase tracking-[0.3em] group-hover:gap-5 transition-all">
+                Detail Jurusan <ArrowRight size={16} />
               </div>
+              
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </motion.div>
           ))}
         </div>
@@ -191,29 +202,31 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedMajor(null)}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
               ></motion.div>
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 lg:p-12 overflow-hidden"
+                initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+                animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                exit={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+                className="relative bg-white w-full max-w-2xl rounded-[4rem] shadow-[0_80px_150px_rgba(0,0,0,0.4)] p-12 lg:p-16 overflow-hidden perspective-[1000px]"
               >
-                <div className={`${selectedMajor.color} w-20 h-20 rounded-3xl flex items-center justify-center text-white mb-8 shadow-xl`}>
-                  <selectedMajor.icon size={40} />
+                <div className={`${selectedMajor.color} w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white mb-10 shadow-2xl transform rotate-6`}>
+                  <selectedMajor.icon size={48} />
                 </div>
-                <h3 className="text-4xl font-black mb-2 tracking-tight">{selectedMajor.name}</h3>
-                <p className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-8">{selectedMajor.full}</p>
-                <div className="h-px bg-gray-100 w-full mb-8"></div>
-                <p className="text-gray-600 text-lg leading-relaxed font-medium mb-10">
+                <h3 className="text-5xl font-black mb-4 tracking-tighter uppercase italic">{selectedMajor.name}</h3>
+                <p className="text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-10 opacity-70">{selectedMajor.full}</p>
+                <div className="h-0.5 bg-slate-50 w-full mb-10"></div>
+                <p className="text-gray-500 text-lg leading-relaxed font-bold italic mb-12">
                   {selectedMajor.desc}
                 </p>
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedMajor(null)}
-                  className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-slate-800 transition-all uppercase tracking-widest"
+                  className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-sm hover:bg-black transition-all uppercase tracking-[0.4em] shadow-xl"
                 >
-                  Tutup Informasi
-                </button>
+                  Selesai Membaca
+                </motion.button>
               </motion.div>
             </div>
           )}
@@ -221,22 +234,26 @@ const LandingPage: React.FC<PageProps> = ({ navigate }) => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-6 text-center">
-        <div className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-12 lg:p-24 text-white relative overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.3)] transform hover:scale-[1.01] transition-transform duration-500">
+      <section className="py-32 px-6 text-center">
+        <div className="max-w-6xl mx-auto bg-slate-900 rounded-[5rem] p-16 lg:p-32 text-white relative overflow-hidden shadow-[0_50px_150px_rgba(0,0,0,0.4)] group">
           <div className="relative z-10">
-            <h2 className="text-4xl lg:text-6xl font-black mb-8 italic uppercase leading-none">Siap Mengukir Prestasi?</h2>
-            <p className="text-xl text-white/50 mb-12 max-w-2xl mx-auto font-bold">
+            <h2 className="text-5xl lg:text-8xl font-black mb-10 italic uppercase leading-none tracking-tighter drop-shadow-2xl">
+              SIAP <span className="text-primary">MENGUKIR</span> PRESTASI?
+            </h2>
+            <p className="text-xl text-white/40 mb-16 max-w-2xl mx-auto font-black uppercase tracking-widest text-xs leading-loose">
               Sistem Dashboard terintegrasi SMK Prima Unggul memfasilitasi kebutuhan akademik siswa dan guru dalam satu platform modern.
             </p>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.1, y: -10 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => navigate("/login")}
-              className="bg-primary text-white px-12 py-6 rounded-[2rem] font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-[0_20px_40px_rgba(244,63,94,0.4)] italic uppercase"
+              className="bg-primary text-white px-16 py-8 rounded-[3rem] font-black text-3xl transition-all shadow-[0_40px_80px_rgba(244,63,94,0.5)] italic uppercase tracking-tighter"
             >
-              Mulai Sekarang <ArrowRight size={24} className="inline ml-2" />
-            </button>
+              Mulai Sekarang <ArrowRight size={32} className="inline ml-4 group-hover:translate-x-4 transition-transform duration-500" />
+            </motion.button>
           </div>
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-pulse"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-red-500/10 rounded-full blur-[100px]"></div>
         </div>
       </section>
 

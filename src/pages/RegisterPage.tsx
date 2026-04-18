@@ -195,28 +195,32 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
                 Sistem Identifikasi Peran
               </label>
               <div className="grid grid-cols-2 gap-6">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setRole('siswa')}
                   className={cn(
-                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform hover:-translate-y-2",
+                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform",
                     role === 'siswa' ? "border-primary bg-red-50 text-primary shadow-xl shadow-primary/10" : "border-gray-50 bg-gray-50/50 hover:border-gray-100 text-gray-400"
                   )}
                 >
                   <GraduationCap size={40} />
                   <span className="font-black text-xs uppercase italic tracking-widest">Siswa Siswi</span>
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setRole('guru')}
                   className={cn(
-                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform hover:-translate-y-2",
+                    "p-8 rounded-[2.5rem] border-2 flex flex-col items-center gap-4 transition-all shadow-sm transform",
                     role === 'guru' ? "border-primary bg-red-50 text-primary shadow-xl shadow-primary/10" : "border-gray-50 bg-gray-50/50 hover:border-gray-100 text-gray-400"
                   )}
                 >
                   <UserCog size={40} />
                   <span className="font-black text-xs uppercase italic tracking-widest">Guru Karyawan</span>
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -246,30 +250,34 @@ const RegisterPage: React.FC<PageProps> = ({ navigate }) => {
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                     {majors.map(m => (
-                      <button
+                      <motion.button
                         key={m}
                         type="button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => setMajor(m)}
                         className={cn(
-                          "py-4 rounded-xl text-[10px] font-black transition-all transform hover:scale-105 active:scale-95",
+                          "py-4 rounded-xl text-[10px] font-black transition-all",
                           major === m ? "bg-slate-900 text-white shadow-xl" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
                         )}
                       >
                         {m}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
               </motion.div>
             )}
 
-            <button
+            <motion.button
               disabled={loading}
-              className="w-full bg-primary text-white py-8 rounded-[3rem] font-black text-2xl shadow-[0_30px_60px_rgba(244,63,94,0.3)] hover:opacity-95 transform hover:-translate-y-2 active:scale-95 transition-all disabled:opacity-50 mt-10 uppercase italic tracking-tighter"
+              whileHover={{ scale: 1.02, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full bg-primary text-white py-8 rounded-[3rem] font-black text-2xl shadow-[0_30px_60px_rgba(244,63,94,0.3)] hover:opacity-95 transition-all disabled:opacity-50 mt-10 uppercase italic tracking-tighter"
               style={{ transform: "translateZ(80px)" }}
             >
               {loading ? "MEMPROSES DATA..." : "DAFTAR SEKARANG JUGA"}
-            </button>
+            </motion.button>
           </form>
         </div>
       </motion.div>
